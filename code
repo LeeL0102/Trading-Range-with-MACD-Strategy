@@ -1,0 +1,38 @@
+//@version=5
+strategy("Trading Range with MACD Strategy", overlay=true)
+
+// 交易区间参数
+length = input(14, title="Length for High/Low")
+upperMultiplier = input(1.0, title="Upper Multiplier")
+lowerMultiplier = input(1.0, title="Lower Multiplier")
+
+// MACD 参数
+macdFastLength = 12
+macdSlowLength = 26
+macdSignalSmoothing = 9
+[macdLine, signalLine, _] = ta.macd(close, macdFastLength, macdSlowLength, macdSignalSmoothing)
+
+// 计算交易区间
+highestHigh = ta.highest(high, length)
+lowestLow = ta.lowest(low, length)
+priceRange = highestHigh - lowestLow // 修改变量名
+
+// 定义支撑和阻力位
+support = lowestLow + priceRange * lowerMultiplier
+resistance = highestHigh - priceRange * upperMultiplier
+
+// 定义买入和卖出条件
+longCondition = close < support and macdLine > signalLine
+shortCondition = close > resistance and macdLine < signalLine
+
+// 执行策略
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+
+if (shortCondition)
+    strategy.close("Long")
+
+// 绘制支撑和阻力位
+plot(support, title="Support", color=color.green)
+plot(resistance, title="Resistance", color=color.red)
+plot(macdLine - signalLine, color=color.blue, title="MACD Histogram")
